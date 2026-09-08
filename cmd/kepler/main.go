@@ -46,6 +46,7 @@ func main() {
 	printConfigInfo(logger, cfg)
 
 	cfg.ApplyCpuMeterDeprecations(logger)
+	cfg.LogUnknownFields(logger)
 
 	services, err := createServices(logger, cfg)
 	if err != nil {
@@ -241,6 +242,9 @@ func createServices(logger *slog.Logger, cfg *config.Config) ([]service.Service,
 		stdoutExporter := stdout.NewExporter(pm, stdout.WithLogger(logger))
 		services = append(services, stdoutExporter)
 	}
+
+	// created last so that it observes every other service
+	services = append(services, server.NewProbe(logger, apiServer, services))
 
 	return services, nil
 }
